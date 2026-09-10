@@ -184,10 +184,33 @@ final class NotchFleet {
     // MARK: - Readings
 
     func setSnapshots(_ snapshots: [ProviderSnapshot]) {
-        self.snapshots = snapshots
+        // The project gate rides the fleet as a synthetic cell, appended after
+        // the providers. It lives here — at the UI edge — rather than in the
+        // store's snapshot array, so provider/store logic and its tests never
+        // see it.
+        var all = snapshots
+        let state = ProjectStore().gateState()
+        all.append(ProviderSnapshot(
+            id: ProjectGateProvider.id,
+            displayName: "Project Gate",
+            glyph: .gate,
+            fidelity: .derived,
+            status: .ok,
+            windows: [],
+            headlineID: nil,
+            weeklyID: nil,
+            block: state.isAtCap ? UsageBlock(reason: "Gate full — complete or defer a project", resetsAt: nil) : nil,
+            kind: .projectGate,
+            localRuntime: nil,
+            localModel: nil,
+            localPerformance: nil,
+            showsLocalPerformance: false,
+            sourceProviderID: ProjectGateProvider.id
+        ))
+        self.snapshots = all
         let now = Date()
         for controller in controllers.values {
-            controller.model.updateSnapshots(snapshots)
+            controller.model.updateSnapshots(all)
             controller.model.now = now
         }
     }
