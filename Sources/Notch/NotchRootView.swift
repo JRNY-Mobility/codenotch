@@ -256,15 +256,37 @@ struct NotchRootView: View {
                 )).animation(motion(NotchMotion.unfold)))
         }
 
+        // The project gate is drawn at the view layer, after the provider
+        // cells, so no provider/store array (or its tests) ever sees it.
+        let gateIndex = model.snapshots.count
+        let gate = ProjectGateCell()
+            .frame(width: model.edge.isVertical ? nil : NotchLayout.cellAlong(for: model.edge))
+            .opacity(model.isExpanded ? 1 : 0)
+            .offset(
+                x: model.isExpanded ? 0 : model.edge.outward.x * Design.px(28),
+                y: model.isExpanded ? 0 : model.edge.outward.y * Design.px(28)
+            )
+            .animation(motion(NotchMotion.stagger(index: gateIndex)), value: model.isExpanded)
+            .transition(.opacity.combined(with: .offset(
+                x: model.edge.outward.x * Design.px(28),
+                y: model.edge.outward.y * Design.px(28)
+            )).animation(motion(NotchMotion.unfold)))
+
         Group {
             if model.edge.isVertical {
-                VStack(spacing: model.cellSpacing) { stack }
+                VStack(spacing: model.cellSpacing) {
+                    stack
+                    gate
+                }
                     .padding(.top, leadIn)
                     // The contents keep the expanded layout while folding, so
                     // the stack does not reflow on its way out; the shape clips it.
                     .frame(width: NotchLayout.bodyDepth(for: model.edge))
             } else {
-                HStack(spacing: model.cellSpacing) { stack }
+                HStack(spacing: model.cellSpacing) {
+                    stack
+                    gate
+                }
                     .padding(.leading, leadIn)
                     .frame(height: NotchLayout.bodyDepth(for: model.edge))
             }

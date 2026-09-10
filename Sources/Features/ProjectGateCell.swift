@@ -1,11 +1,35 @@
 import SwiftUI
 
+/// The project gate cell: one ring in the notch fleet that reads the WIP cap.
+///
+/// Reuses the same `ProviderRing` shape as providers — `usedFraction` is the
+/// active share of the cap, the glyph is a simple count mark. Drawn at the
+/// view layer (see `NotchRootView.cells`) so provider/store snapshot arrays
+/// and their tests never see it.
+struct ProjectGateCell: View {
+    /// Reads the shared store on every body evaluation; the fleet's poller
+    /// triggers redraws, so counts stay live while the app runs.
+    private var state: ProjectGateState { ProjectStore().gateState() }
+    private var fraction: Double { Double(state.active) / Double(max(state.cap, 1)) }
+
+    var body: some View {
+        ProviderRing(
+            usedFraction: fraction,
+            glyph: .gate,
+            isStale: false,
+            isBlocked: state.isAtCap,
+            activity: nil,
+            isRefreshing: false,
+            localPerformance: nil,
+            weeklyFraction: nil,
+            weeklyRing: .off
+        )
+        .accessibilityLabel("Project gate \(state.active) of \(state.cap) active")
+    }
+}
+
 /// The gate's entry in the tooltip card: count line plus one row per project
 /// with Complete and Defer actions wired back into the store.
-///
-/// The ring itself is drawn by the ordinary `ProviderRing` from the gate's
-/// synthetic snapshot (appended to the fleet in `NotchFleet.setSnapshots`);
-/// this view is only the expanded card content.
 struct ProjectGateTooltip: View {
     let store: ProjectStore
     let onChanged: () -> Void
