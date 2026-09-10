@@ -3,6 +3,9 @@ import Foundation
 enum ProviderKind: Equatable {
     case usage
     case localRuntime
+    /// The project gate — not a provider, but it rides the same snapshot
+    /// pipeline so the fleet draws it in order with the providers.
+    case projectGate
 }
 
 /// One source of usage numbers. Each adapter declares how trustworthy it is,

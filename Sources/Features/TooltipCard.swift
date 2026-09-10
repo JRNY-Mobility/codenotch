@@ -831,7 +831,16 @@ struct TooltipCard: View {
     /// The same figure the hover region uses, so what is drawn and what is
     /// reachable can never drift apart.
     private var height: CGFloat {
-        NotchLayout.cardHeight(
+        if snapshot.kind == .projectGate {
+            // The gate lists its projects; height grows with the count. The
+            // header plus one row per project plus padding, capped so a long
+            // list does not cover the screen.
+            let count = ProjectStore().list().count
+            let rows = min(count + 1, 8) // +1 for the count header line
+            return 2 * NotchLayout.cardPadding + NotchLayout.cardTitleLineHeight
+                + CGFloat(rows) * (NotchLayout.cardBodyLineHeight + NotchLayout.sessionRowGap)
+        }
+        return NotchLayout.cardHeight(
             windowCount: snapshot.windows.count,
             groupCount: snapshot.windowGroupCount,
             sessionCount: snapshot.localModel == nil ? (activity?.sessions.count ?? 0) : 0,
@@ -847,6 +856,11 @@ struct TooltipCard: View {
 
     var body: some View {
         TooltipShell(height: height, direction: direction, tailOffset: tailOffset) {
+            if snapshot.kind == .projectGate {
+                ProjectGateTooltip(store: ProjectStore(), onChanged: {})
+                    .id(snapshot.id)
+                    .transition(.opacity.animation(NotchMotion.crossfade))
+            } else {
             // Stacked, not replaced in place: during a swap both sets of rows
             // exist for a moment, and in a ZStack they overlap and dissolve
             // instead of shoving each other around. Top-aligned so neither
@@ -871,6 +885,7 @@ struct TooltipCard: View {
                 .transition(.opacity.animation(NotchMotion.crossfade))
             }
             .frame(maxWidth: .infinity, alignment: .topLeading)
+            }
         }
     }
 }
