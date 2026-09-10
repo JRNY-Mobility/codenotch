@@ -11,12 +11,13 @@ final class ProjectGateCLITests: XCTestCase {
         return ProjectStore(defaults: defaults)
     }
 
-    /// A harness that captures stdout/stderr instead of printing.
-    private struct Capture {
+    /// A harness that captures stdout/stderr instead of printing. A class so
+    /// the escaping closures mutate the one shared instance.
+    private final class Capture {
         var out: [String] = []
         var err: [String] = []
-        var stdout: (String) -> Void { { self.out.append($0) } }
-        var stderr: (String) -> Void { { self.err.append($0) } }
+        var stdout: (String) -> Void { { [weak self] in self?.out.append($0) } }
+        var stderr: (String) -> Void { { [weak self] in self?.err.append($0) } }
     }
 
     // MARK: - Add

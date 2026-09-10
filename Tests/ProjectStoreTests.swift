@@ -134,7 +134,7 @@ final class ProjectStoreTests: XCTestCase {
     }
 }
 
-extension Result where Failure == ProjectGateError {
+extension Result where Failure == ProjectGateError, Success == Void {
     static func == (lhs: Result<Void, ProjectGateError>, rhs: Result<Void, ProjectGateError>) -> Bool {
         switch (lhs, rhs) {
         case (.success, .success): return true
