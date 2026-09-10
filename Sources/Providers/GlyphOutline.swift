@@ -1351,4 +1351,31 @@ enum GlyphOutline {
             CGPoint(x: 0.6846, y: 0.4269),
         ],
     ]
+
+    /// The project gate: a task list of three horizontal bars. Rounded ends
+    /// come from the fill style rather than extra points — the shape is drawn
+    /// with even-odd fill, so each bar is its own closed loop.
+    static let gate: [[CGPoint]] = [
+        // Bar 1 (top)
+        [
+            CGPoint(x: 0.12, y: 0.22),
+            CGPoint(x: 0.88, y: 0.22),
+            CGPoint(x: 0.88, y: 0.34),
+            CGPoint(x: 0.12, y: 0.34),
+        ],
+        // Bar 2 (middle)
+        [
+            CGPoint(x: 0.12, y: 0.47),
+            CGPoint(x: 0.88, y: 0.47),
+            CGPoint(x: 0.88, y: 0.59),
+            CGPoint(x: 0.12, y: 0.59),
+        ],
+        // Bar 3 (bottom)
+        [
+            CGPoint(x: 0.12, y: 0.72),
+            CGPoint(x: 0.88, y: 0.72),
+            CGPoint(x: 0.88, y: 0.84),
+            CGPoint(x: 0.12, y: 0.84),
+        ],
+    ]
 }

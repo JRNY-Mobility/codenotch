@@ -93,6 +93,9 @@ enum ProjectGateCLI {
             let names = open.isEmpty ? "an active project" : open.joined(separator: ", ")
             stderr("project gate is full (\(state.active)/\(state.cap) active); complete or defer \(names) first")
             return exitFailure
+        case .failure(.invalidTitle):
+            stderr("error: project title must not be empty")
+            return exitUsage
         case .failure:
             stderr("error: could not add project")
             return exitFailure
@@ -142,6 +145,9 @@ enum ProjectGateCLI {
             return exitOK
         case .failure(.invalidDate):
             stderr("defer date must be in the future — \"\(arguments[2])\" is not")
+            return exitFailure
+        case .failure(.notFound):
+            stderr("\"\(project.title)\" is completed and cannot be deferred")
             return exitFailure
         case .failure:
             stderr("error: could not defer \"\(project.title)\"")

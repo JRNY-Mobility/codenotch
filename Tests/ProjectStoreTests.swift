@@ -73,6 +73,25 @@ final class ProjectStoreTests: XCTestCase {
         }
     }
 
+    func testEmptyTitleIsRejected() {
+        let store = makeStore()
+        guard case .failure(.invalidTitle) = store.add(title: "   ", now: now) else {
+            return XCTFail("expected invalidTitle for a blank title")
+        }
+        XCTAssertEqual(store.activeCount(now: now), 0)
+    }
+
+    func testCompletedProjectCannotBeDeferredBackIntoFlight() {
+        let store = makeStore()
+        XCTAssertSuccess(store.add(title: "P1", now: now))
+        let target = store.resolve("P1")!
+        XCTAssertSuccess(store.complete(id: target.id, now: now))
+        guard case .failure = store.defer(id: target.id, until: now.addingTimeInterval(day), now: now) else {
+            return XCTFail("expected failure deferring a completed project")
+        }
+        XCTAssertEqual(store.resolve("P1")?.status, .completed)
+    }
+
     // MARK: - Resolution & ordering
 
     func testResolveByIdAndTitleCaseInsensitive() {

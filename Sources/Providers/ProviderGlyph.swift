@@ -82,7 +82,7 @@ enum ProviderGlyph: String, Codable, Equatable {
         case .commandcode: return GlyphOutline.commandcode
         case .copilot: return GlyphOutline.copilot
         case .ollama, .ollamaLocal: return GlyphOutline.ollama
-        case .gate: return []
+        case .gate: return GlyphOutline.gate
         }
     }
 }

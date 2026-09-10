@@ -57,6 +57,28 @@ final class ProjectGateCLITests: XCTestCase {
         XCTAssertEqual(code, 2)
     }
 
+    func testAddBlankTitleIsUsageError() {
+        let store = makeStore()
+        var capture = Capture()
+        let code = ProjectGateCLI.run(arguments: ["project", "add", "   "],
+                                      store: store, now: now,
+                                      stdout: capture.stdout, stderr: capture.stderr)
+        XCTAssertEqual(code, 2)
+        XCTAssertTrue(capture.err.joined().contains("empty"))
+    }
+
+    func testDeferCompletedProjectFails() {
+        let store = makeStore()
+        XCTAssertSuccess(store.add(title: "Alpha", now: now))
+        XCTAssertSuccess(store.complete(id: store.resolve("Alpha")!.id, now: now))
+        var capture = Capture()
+        let code = ProjectGateCLI.run(arguments: ["project", "defer", "alpha", "--until", "2030-01-01"],
+                                      store: store, now: now,
+                                      stdout: capture.stdout, stderr: capture.stderr)
+        XCTAssertEqual(code, 1)
+        XCTAssertTrue(capture.err.joined().contains("completed"))
+    }
+
     // MARK: - Done
 
     func testDoneCompletesAndFreesSlot() {

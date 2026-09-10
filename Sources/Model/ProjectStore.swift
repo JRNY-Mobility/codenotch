@@ -27,15 +27,18 @@ struct ProjectStore {
     // MARK: - Commands
 
     /// Open a new project. Fails with `.capReached` while `cap` projects are
-    /// active — deferred projects do not hold a slot.
+    /// active — deferred projects do not hold a slot. A blank title is a usage
+    /// error, not a project.
     @discardableResult
     func add(title: String, now: Date = Date()) -> Result<Void, ProjectGateError> {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return .failure(.invalidTitle) }
         var projects = load()
         expireDeferred(in: &projects, now: now)
         guard activeCount(in: projects) < Self.cap else {
             return .failure(.capReached)
         }
-        projects.append(Project(title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+        projects.append(Project(title: trimmed,
                                 createdAt: now))
         save(projects)
         return .success(())
@@ -56,6 +59,7 @@ struct ProjectStore {
     }
 
     /// Park a project until a future date, freeing its slot immediately.
+    /// A completed project is finished — it cannot be parked back into flight.
     @discardableResult
     func `defer`(id: UUID, until: Date, now: Date = Date()) -> Result<Void, ProjectGateError> {
         guard until > now else { return .failure(.invalidDate) }
@@ -63,6 +67,9 @@ struct ProjectStore {
         expireDeferred(in: &projects, now: now)
         guard let index = projects.firstIndex(where: { $0.id == id }) else {
             return .failure(.notFound)
+        }
+        guard projects[index].status != .completed else {
+            return .failure(.notFound)  // a completed project cannot be deferred
         }
         projects[index].status = .deferred
         projects[index].deferUntil = until

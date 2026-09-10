@@ -8,4 +8,6 @@ enum ProjectGateError: Error, Equatable {
     case notFound
     /// The defer date was not a usable future date.
     case invalidDate
+    /// The project title was blank after trimming.
+    case invalidTitle
 }
