@@ -13,7 +13,7 @@ on:
 
 jobs:
   package:
-    if: github.repository == 'vinzdg/codenotch'
+    # Fork-friendly: run on any repo so forks get CI too.
     name: Unsigned app bundle
     # Only the preview release step writes anything; the token is read-only by
     # default on this repository, and `gh release create` fails without this.
