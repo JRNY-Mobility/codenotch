@@ -24,7 +24,9 @@ final class ProjectStoreTests: XCTestCase {
             XCTAssertSuccess(store.add(title: "P\(index)", now: now))
         }
         XCTAssertEqual(store.activeCount(now: now), 5)
-        XCTAssertEqual(store.add(title: "P6", now: now), .failure(.capReached))
+        guard case .failure(.capReached) = store.add(title: "P6", now: now) else {
+            return XCTFail("expected capReached for the 6th add")
+        }
     }
 
     func testCompleteFreesSlot() {
@@ -52,8 +54,9 @@ final class ProjectStoreTests: XCTestCase {
         let store = makeStore()
         XCTAssertSuccess(store.add(title: "P1", now: now))
         let target = store.resolve("P1")!
-        XCTAssertEqual(store.defer(id: target.id, until: now.addingTimeInterval(-day), now: now),
-                       .failure(.invalidDate))
+        guard case .failure(.invalidDate) = store.defer(id: target.id, until: now.addingTimeInterval(-day), now: now) else {
+            return XCTFail("expected invalidDate for a past defer date")
+        }
     }
 
     func testExpiredDeferredReactivatesAndBlocksNewAddsUntilUnder() {
@@ -65,7 +68,9 @@ final class ProjectStoreTests: XCTestCase {
         // The defer date passes: P2 returns to active, pushing over the cap.
         let later = now.addingTimeInterval(day + 1)
         XCTAssertEqual(store.activeCount(now: later), 6)
-        XCTAssertEqual(store.add(title: "P7", now: later), .failure(.capReached))
+        guard case .failure(.capReached) = store.add(title: "P7", now: later) else {
+            return XCTFail("expected capReached while over the cap")
+        }
     }
 
     // MARK: - Resolution & ordering
@@ -130,16 +135,6 @@ final class ProjectStoreTests: XCTestCase {
         guard case .success = result else {
             XCTFail("expected success, got \(result)", file: file, line: line)
             return
-        }
-    }
-}
-
-extension Result where Failure == ProjectGateError, Success == Void {
-    static func == (lhs: Result<Void, ProjectGateError>, rhs: Result<Void, ProjectGateError>) -> Bool {
-        switch (lhs, rhs) {
-        case (.success, .success): return true
-        case (.failure(let a), .failure(let b)): return a == b
-        default: return false
         }
     }
 }
