@@ -55,6 +55,11 @@ targets:
           # copy any unrecognised file into the app bundle's Resources, and a
           # developer README has no business shipping to users.
           - "Vendor/**/README.md"
+          # The CLI's entry point: top-level code in a module that already has
+          # `@main` is a second entry point. The CLI *logic* below it stays in
+          # the app so the test bundle can drive it, exactly like every other
+          # command parser in this project.
+          - "CLI/main.swift"
     dependencies:
       - package: Sparkle
       - package: SwiftNIO
@@ -116,6 +121,22 @@ targets:
         # together if the Desktop source is ever dropped.
         SWIFT_OBJC_BRIDGING_HEADER: Sources/Codenotch-Bridging-Header.h
 
+  CodenotchCLI:
+    type: tool
+    platform: macOS
+    # The gate's model is shared with the app by listing the same files in
+    # both targets; the command parser too, so `make test-ci` compiles it and
+    # the test bundle can drive it. Only `main.swift` is CLI-only.
+    sources:
+      - path: Sources/CLI
+      - path: Sources/Model/Project.swift
+      - path: Sources/Model/ProjectGateError.swift
+      - path: Sources/Model/ProjectStore.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.vinz.codenotch.cli
+        GENERATE_INFOPLIST_FILE: "YES"
+
   CodenotchTests:
     type: bundle.unit-test
     platform: macOS
@@ -133,6 +154,10 @@ schemes:
     build:
       targets:
         Codenotch: all
+        # The CLI is part of this project's build so CI compiles it too —
+        # this machine has no Xcode, and a stale `codenotch` binary is worse
+        # than none when agents are told to call it.
+        CodenotchCLI: all
         CodenotchTests: [test]
     run:
       config: Debug

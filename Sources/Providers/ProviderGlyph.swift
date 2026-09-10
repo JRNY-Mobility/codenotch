@@ -29,6 +29,8 @@ enum ProviderGlyph: String, Codable, Equatable {
     case copilot
     case ollama
     case ollamaLocal = "ollama-local"
+    /// The project gate — not a provider, but it lives in the same fleet.
+    case gate
 
     /// If an asset with this name is in the bundle it wins over the traced
     /// outline — drop a PDF/SVG export from Figma in and it is picked up.
@@ -61,6 +63,7 @@ enum ProviderGlyph: String, Codable, Equatable {
         case .third:  return 1.0
         case .ollamaLocal: return 0.98
         case .qwen, .gemma, .meta, .deepseek, .mistral: return 1.0
+        case .gate: return 1.0
         }
     }
 
@@ -79,6 +82,7 @@ enum ProviderGlyph: String, Codable, Equatable {
         case .commandcode: return GlyphOutline.commandcode
         case .copilot: return GlyphOutline.copilot
         case .ollama, .ollamaLocal: return GlyphOutline.ollama
+        case .gate: return []
         }
     }
 }

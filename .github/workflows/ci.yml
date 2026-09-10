@@ -7,7 +7,8 @@ on:
 
 jobs:
   test:
-    if: github.repository == 'vinzdg/codenotch'
+    # Fork-friendly: run on any repo so forks get CI too. The upstream repo
+    # restricts to itself to save minutes; this fork wants its own builds.
     name: Unit tests
     # macOS 26, because that is what the app targets. An older image ships an
     # Xcode that cannot read the project at all — `objectVersion 77` is a

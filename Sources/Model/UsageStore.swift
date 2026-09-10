@@ -27,6 +27,9 @@ final class UsageStore: ObservableObject {
     @Published private(set) var needsRenewal: Set<String> = []
 
     private let providers: [UsageProvider]
+    /// The gate's store; shared with the CLI and the notch cell. Injected so
+    /// tests can point it at an isolated domain.
+    let projectStore: ProjectStore
     /// Provider IDs block fetching before credential access. Model IDs only hide
     /// their cells so disabling one model does not stop the shared runtime.
     @Published var disconnected: Set<String> = [] {
@@ -146,10 +149,12 @@ final class UsageStore: ObservableObject {
         archive: UsageArchive = UsageArchive(),
         disconnected: Set<String> = [],
         order: [String] = [],
+        projectStore: ProjectStore = ProjectStore(),
         pollingNow: @escaping () -> Date = Date.init
     ) {
         self.pollingNow = pollingNow
         self.providers = providers
+        self.projectStore = projectStore
         self.refreshInterval = refreshInterval
         self.localRefreshInterval = localRefreshInterval
         self.idleRefreshInterval = idleRefreshInterval
@@ -195,7 +200,28 @@ final class UsageStore: ObservableObject {
     }
 
     private func updateNotchSnapshots() {
-        let cells = ProviderOrder.cells(from: snapshots, keeping: notchSnapshots)
+        var cells = ProviderOrder.cells(from: snapshots, keeping: notchSnapshots)
+        // The project gate rides the same fleet: a synthetic cell that reads
+        // the WIP cap from the shared store. Pinned first so it cannot be
+        // pushed off-screen by a growing provider list.
+        let gateState = projectStore.gateState()
+        cells.insert(ProviderSnapshot(
+            id: ProjectGateProvider.id,
+            displayName: "Project Gate",
+            glyph: .gate,
+            fidelity: .derived,
+            status: .ok,
+            windows: [],
+            headlineID: nil,
+            weeklyID: nil,
+            block: gateState.isAtCap ? UsageBlock(reason: "Gate full — complete or defer a project", resetsAt: nil) : nil,
+            kind: .projectGate,
+            localRuntime: nil,
+            localModel: nil,
+            localPerformance: nil,
+            showsLocalPerformance: false,
+            sourceProviderID: ProjectGateProvider.id
+        ), at: 0)
         notchSnapshots = ProviderOrder.arrange(cells, by: order, id: \.id)
             .filter { !disconnected.contains($0.id) }
     }
